@@ -4,6 +4,7 @@ Provides way of retrieving data from backend/api with caching.
 
 - Using pinia for store responses and promises while they are in pending state
 - One time backend request, all next requests will be handled by the same promise, or by the cache data if it fetched already
+- Custom expiration time for each request forcing to refetch data when expired
 - Resolved promises will be removed from store
 
 # Install ky
@@ -22,34 +23,32 @@ npm install pinia
 # Usage
 Copy files from **use** and **stores** to your vue project.
 Simple example located in **example.vue** file.
-Second argument in **useGetRequest** is a cache key, if not set - no caching will be used.
+There is two functions in useApi.<br>
+First one - getApi(), will use get request with no any caching.<br>
+Second one - getApiWithCache(), will use get request with caching with expiration time defined in second argument 
 
 ```vue
 <script setup lang="ts">
-import { ref } from "vue";
-import { useGetRequest } from "@/use/useFetchRequest";
-
-const url = ref('/path/to/api')
-
-const data = ref()
-const error = ref()
-const isLoading = ref(true)
-
-useGetRequest(url, url).then((result) => {
-    data.value = result
-}).catch((err) => {
-    error.value = err
-}).finally(() => {
-    isLoading.value = false
-})
+    import { onMounted } from 'vue'
+    import useApi from '@/use/useApi'
+    
+    // Get api data
+    const { data, isLoading, isLoaded, errors, getApiWithCache } = useApi()
+    onMounted(() => {
+        // Get data from api with cache time of 300 seconds
+        getApiWithCache('getsomedata', 300)
+    })
 </script>
 
 <template>
-    <div v-if="isLoading">Loading...</div>
-    <div v-else-if="error">
-        Error: {{ error.message }}
+    <div v-if="isLoading && !isLoaded">
+        Loading...
     </div>
-    <div v-else-if="data">
+    <div v-if="errors && !isLoading">
+        Ooops!<br>
+        {{ errors }}
+    </div>
+    <div v-if="isLoaded && !errors">
         <h1>{{ data.title }}</h1>
         <div v-html="data.content"></div>
     </div>
@@ -58,4 +57,6 @@ useGetRequest(url, url).then((result) => {
 
 # Contact me
 
-You always welcome to mail me at sergey@volkar.ru
+You always welcome to write me
+- E-mail: sergey@volkar.ru
+- Telegram: @sergeyvolkar

@@ -1,28 +1,24 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useGetRequest } from "@/use/useFetchRequest";
+    import { onMounted } from 'vue'
+    import useApi from '@/use/useApi'
 
-const url = ref('/path/to/api')
-
-const data = ref()
-const error = ref()
-const isLoading = ref(true)
-
-useGetRequest(url, url).then((result) => {
-    data.value = result
-}).catch((err) => {
-    error.value = err
-}).finally(() => {
-    isLoading.value = false
-})
+    // Get api data
+    const { data, isLoading, isLoaded, errors, getApiWithCache } = useApi()
+    onMounted(() => {
+        // Get data from api with cache time of 300 seconds
+        getApiWithCache('getsomedata', 300)
+    })
 </script>
 
 <template>
-    <div v-if="isLoading">Loading...</div>
-    <div v-else-if="error">
-        Error: {{ error.message }}
+    <div v-if="isLoading && !isLoaded">
+        Loading...
     </div>
-    <div v-else-if="data">
+    <div v-if="errors && !isLoading">
+        Ooops!<br>
+        {{ errors }}
+    </div>
+    <div v-if="isLoaded && !errors">
         <h1>{{ data.title }}</h1>
         <div v-html="data.content"></div>
     </div>
